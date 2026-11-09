@@ -18,9 +18,14 @@ export default function GroupHikeDetail() {
       <p className="mt-2">
         {hike.spotsTotal - hike.spotsTaken} of {hike.spotsTotal} spots left
       </p>
-      <Link to={`/trails/${trail.id}`} className="mt-4 inline-block underline">
-        View trail
-      </Link>
+      <div className="mt-4 flex gap-4">
+        <Link to={`/trails/${trail.id}`} className="underline">
+          View trail
+        </Link>
+        <Link to={`/group-hikes/${hike.id}/edit`} className="underline">
+          Edit hike
+        </Link>
+      </div>
     </>
   )
 }

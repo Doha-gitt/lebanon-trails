@@ -3,10 +3,9 @@ import { useTheme } from '../context/ThemeContext'
 
 const links = [
   { to: '/trails', label: 'Trails' },
-  { to: '/group-hikes', label: 'Group Hikes' },
-  { to: '/about', label: 'About' },
-  { to: '/profile', label: 'Profile' },
+  { to: '/group-hikes/new', label: 'Organize a Hike' },
   { to: '/login', label: 'Log in' },
+  { to: '/register', label: 'Register' },
 ]
 
 function linkClass({ isActive }) {
