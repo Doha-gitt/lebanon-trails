@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Team colors live here (Tailwind v4 has no tailwind.config.js).
+   --color-brand gives you bg-brand, text-brand, border-brand, etc. */
+@theme {
+  --color-brand: #15803d;
+}
