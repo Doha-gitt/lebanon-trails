@@ -1,222 +1,292 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useState } from 'react'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { trails } from '../data/mockData'
+import { useHikes } from '../context/HikesContext'
+import { useAuth } from '../context/AuthContext'
+import { FormError, FormField, inputClass } from '../components/FormField'
 
-export default function OrganizeHikePage({ hikes, setHikes }) {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const isEditing = Boolean(id);
+// Helper to get today's date in YYYY-MM-DD format for HTML min attribute
+const getTodayDate = () => {
+  const today = new Date()
+  const yyyy = today.getFullYear()
+  const mm = String(today.getMonth() + 1).padStart(2, '0')
+  const dd = String(today.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}
 
-  const [formData, setFormData] = useState({
-    title: "",
-    region: "Mount Lebanon",
-    difficulty: "Moderate",
-    distanceKm: "",
-    date: "",
-    maxParticipants: "",
-    description: ""
-  });
+// Turns a saved hike into form values (numbers and lists become text).
+function hikeToForm(hike) {
+  return {
+    ...hike,
+    durationHours: String(hike.durationHours),
+    spotsTotal: String(hike.spotsTotal),
+    whatToBring: hike.whatToBring.join('\n'),
+  }
+}
 
-  const [error, setError] = useState("");
+// Organize a new hike (/group-hikes/new) or edit one (/group-hikes/:hikeId/edit).
+// The key gives each hike its own fresh form, so moving from "Edit" to
+// "Organize a Hike" doesn't keep the old hike's values.
+export default function HikeForm() {
+  const { hikeId } = useParams()
+  return <HikeFormContent key={hikeId ?? 'new'} hikeId={hikeId} />
+}
 
-  // Helper to get today's date in YYYY-MM-DD format for HTML min attribute
-  const getTodayDate = () => {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
-  };
+function HikeFormContent({ hikeId }) {
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const { hikes, addHike, updateHike } = useHikes()
+  const { currentUser } = useAuth()
 
-  // Pre-populate form if editing an existing hike
-  useEffect(() => {
-    if (isEditing && hikes) {
-      const existingHike = hikes.find((h) => h.id === id);
-      if (existingHike) {
-        setFormData(existingHike);
-      }
-    }
-  }, [id, isEditing, hikes]);
+  const isEditing = Boolean(hikeId)
+  const existingHike = isEditing ? hikes.find((hike) => hike.id === hikeId) : null
+
+  // Pre-populate form if editing an existing hike. A new hike can start with a
+  // trail chosen (link from a trail page: ?trail=barouk) and the user as guide.
+  const [formData, setFormData] = useState(() =>
+    existingHike
+      ? hikeToForm(existingHike)
+      : {
+          trailId: searchParams.get('trail') ?? '',
+          title: '',
+          date: '',
+          startTime: '09:00',
+          meetingPoint: '',
+          durationHours: '',
+          guide: currentUser?.name ?? '',
+          spotsTotal: '',
+          description: '',
+          whatToBring: '',
+        },
+  )
+  const [error, setError] = useState('')
+
+  if (isEditing && !existingHike) {
+    return (
+      <section className="py-10">
+        <h1 className="text-3xl font-bold">Hike not found</h1>
+        <p className="mt-2">This hike doesn't exist, so it can't be edited.</p>
+        <Link to="/trails" className="mt-4 inline-block underline underline-offset-4">
+          Browse trails
+        </Link>
+      </section>
+    )
+  }
+
+  const selectedTrail = trails.find((trail) => trail.id === formData.trailId)
 
   const handleChange = (e) => {
-    if (error) setError("");
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+    if (error) setError('')
+    setFormData({ ...formData, [e.target.name]: e.target.value })
+  }
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    setError("");
+    e.preventDefault()
+    setError('')
 
-    const { title, region, difficulty, distanceKm, date, maxParticipants, description } = formData;
+    const { trailId, title, date, startTime, meetingPoint, durationHours, guide, spotsTotal, description } = formData
 
     // Validation checks
-    if (!title.trim() || !distanceKm || !date || !maxParticipants || !description.trim()) {
-      setError("Please fill in all required fields.");
-      return;
+    if (
+      !trailId ||
+      !title.trim() ||
+      !date ||
+      !startTime ||
+      !meetingPoint.trim() ||
+      !durationHours ||
+      !guide.trim() ||
+      !spotsTotal ||
+      !description.trim()
+    ) {
+      setError('Please fill in all required fields.')
+      return
     }
 
-    if (Number(distanceKm) <= 0) {
-      setError("Distance must be greater than 0 km.");
-      return;
+    if (Number(durationHours) <= 0) {
+      setError('Duration must be more than 0 hours.')
+      return
     }
 
-    if (Number(maxParticipants) <= 0) {
-      setError("Maximum participants must be at least 1.");
-      return;
+    if (!Number.isInteger(Number(spotsTotal)) || Number(spotsTotal) <= 0) {
+      setError('Number of spots must be a whole number, at least 1.')
+      return
+    }
+
+    if (isEditing && Number(spotsTotal) < existingHike.spotsTaken) {
+      setError(`${existingHike.spotsTaken} people have already joined, so there must be at least ${existingHike.spotsTaken} spots.`)
+      return
     }
 
     // Past date validation check
     if (date < getTodayDate()) {
-      setError("Hike date cannot be in the past.");
-      return;
+      setError('Hike date cannot be in the past.')
+      return
     }
 
+    // Same fields as the hikes in src/data/mockData.js
+    const hike = {
+      trailId,
+      title: title.trim(),
+      date,
+      startTime,
+      meetingPoint: meetingPoint.trim(),
+      durationHours: Number(durationHours),
+      guide: guide.trim(),
+      spotsTotal: Number(spotsTotal),
+      description: description.trim(),
+      whatToBring: formData.whatToBring
+        .split('\n')
+        .map((item) => item.trim())
+        .filter(Boolean),
+    }
+
+    // Save to the shared hikes, then show the hike's page with a confirmation
     if (isEditing) {
-      // Update existing hike in mock state array
-      if (typeof setHikes === "function") {
-        setHikes(hikes.map((h) => (h.id === id ? { ...formData, id } : h)));
-      }
+      updateHike(hikeId, hike)
+      navigate(`/group-hikes/${hikeId}`, { state: { saved: 'updated' } })
     } else {
-      // Create a new hike object with a mock unique ID
-      const newHike = {
-        ...formData,
-        id: Date.now().toString(),
-        organizer: "Current User"
-      };
-      if (typeof setHikes === "function") {
-        setHikes((prev) => [newHike, ...(prev || [])]);
-      }
+      const newId = addHike(hike)
+      navigate(`/group-hikes/${newId}`, { state: { saved: 'created' } })
     }
+  }
 
-    navigate("/hikes"); // Adjust this route to match your team's list view path if needed
-  };
+  const cancelTo = isEditing ? `/group-hikes/${hikeId}` : selectedTrail ? `/trails/${selectedTrail.id}` : '/trails'
 
   return (
-    <div className="max-w-2xl mx-auto my-10 p-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
-      <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
-        {isEditing ? "Edit Group Hike" : "Organize a New Hike"}
-      </h2>
+    <div className="mx-auto my-10 max-w-2xl">
+      <h1 className="text-3xl font-bold md:text-4xl">{isEditing ? 'Edit group hike' : 'Organize a group hike'}</h1>
+      <p className="mt-2 mb-8 opacity-80">
+        {isEditing ? 'Change the details below and save.' : 'Choose a trail and fill in the details. All fields except "What to bring" are required.'}
+      </p>
 
-      {error && (
-        <div className="mb-4 p-3 text-sm text-red-700 bg-red-100 rounded-lg">
-          {error}
-        </div>
-      )}
+      <FormError message={error} />
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Hike Title
-          </label>
+      <form onSubmit={handleSubmit} noValidate className="space-y-5">
+        <FormField
+          id="hike-trail"
+          label="Trail"
+          hint={selectedTrail && `${selectedTrail.region}, ${selectedTrail.difficulty.toLowerCase()}, ${selectedTrail.distanceKm} km`}
+        >
+          <select id="hike-trail" name="trailId" value={formData.trailId} onChange={handleChange} className={inputClass}>
+            <option value="">Choose a trail</option>
+            {trails.map((trail) => (
+              <option key={trail.id} value={trail.id}>
+                {trail.name}
+              </option>
+            ))}
+          </select>
+        </FormField>
+
+        <FormField id="hike-title" label="Hike title">
           <input
+            id="hike-title"
             type="text"
             name="title"
             value={formData.title}
             onChange={handleChange}
-            className="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-emerald-500 outline-none"
-            placeholder="e.g., Bkassine Pine Forest Trail"
+            className={inputClass}
+            placeholder="e.g. Sunrise walk to the waterfall"
           />
-        </div>
+        </FormField>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Region
-            </label>
-            <select
-              name="region"
-              value={formData.region}
-              onChange={handleChange}
-              className="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-emerald-500 outline-none"
-            >
-              <option>North Lebanon</option>
-              <option>Mount Lebanon</option>
-              <option>Bekaa</option>
-              <option>South Lebanon</option>
-              <option>Akkar</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Difficulty
-            </label>
-            <select
-              name="difficulty"
-              value={formData.difficulty}
-              onChange={handleChange}
-              className="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-emerald-500 outline-none"
-            >
-              <option>Easy</option>
-              <option>Moderate</option>
-              <option>Challenging</option>
-              <option>Expert</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Distance (km)
-            </label>
-            <input
-              type="number"
-              name="distanceKm"
-              value={formData.distanceKm}
-              onChange={handleChange}
-              className="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-emerald-500 outline-none"
-              placeholder="10"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Date
-            </label>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <FormField id="hike-date" label="Date">
             {/* min attribute locks out past dates on calendar UI */}
             <input
+              id="hike-date"
               type="date"
               name="date"
               min={getTodayDate()}
               value={formData.date}
               onChange={handleChange}
-              className="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-emerald-500 outline-none"
+              className={inputClass}
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Max Hikers
-            </label>
+          </FormField>
+          <FormField id="hike-time" label="Start time">
+            <input id="hike-time" type="time" name="startTime" value={formData.startTime} onChange={handleChange} className={inputClass} />
+          </FormField>
+          <FormField id="hike-duration" label="Duration (hours)">
             <input
+              id="hike-duration"
               type="number"
-              name="maxParticipants"
-              value={formData.maxParticipants}
+              name="durationHours"
+              min="0.5"
+              step="0.5"
+              value={formData.durationHours}
               onChange={handleChange}
-              className="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-emerald-500 outline-none"
-              placeholder="20"
+              className={inputClass}
+              placeholder="4"
             />
-          </div>
+          </FormField>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Trail Description
-          </label>
+        <FormField id="hike-meeting" label="Meeting point">
+          <input
+            id="hike-meeting"
+            type="text"
+            name="meetingPoint"
+            value={formData.meetingPoint}
+            onChange={handleChange}
+            className={inputClass}
+            placeholder="e.g. Village square parking"
+          />
+        </FormField>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <FormField id="hike-guide" label="Guide">
+            <input id="hike-guide" type="text" name="guide" value={formData.guide} onChange={handleChange} className={inputClass} />
+          </FormField>
+          <FormField
+            id="hike-spots"
+            label="Number of spots"
+            hint={isEditing && existingHike.spotsTaken > 0 ? `${existingHike.spotsTaken} already joined` : undefined}
+          >
+            <input
+              id="hike-spots"
+              type="number"
+              name="spotsTotal"
+              min="1"
+              value={formData.spotsTotal}
+              onChange={handleChange}
+              className={inputClass}
+              placeholder="20"
+            />
+          </FormField>
+        </div>
+
+        <FormField id="hike-description" label="Description">
           <textarea
+            id="hike-description"
             name="description"
             rows="3"
             value={formData.description}
             onChange={handleChange}
-            className="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-emerald-500 outline-none"
-            placeholder="Describe meeting points, terrain, and things to bring..."
+            className={inputClass}
+            placeholder="What the hike is like: terrain, pace, highlights"
           />
-        </div>
+        </FormField>
 
-        <button
-          type="submit"
-          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 rounded-lg transition-colors shadow-md cursor-pointer"
-        >
-          {isEditing ? "Update Hike Details" : "Publish Hike Listing"}
-        </button>
+        <FormField id="hike-bring" label="What to bring (optional)" hint="One item per line">
+          <textarea
+            id="hike-bring"
+            name="whatToBring"
+            rows="4"
+            value={formData.whatToBring}
+            onChange={handleChange}
+            className={inputClass}
+            placeholder={'2 litres of water\nShoes with good grip'}
+          />
+        </FormField>
+
+        <div className="flex flex-wrap items-center gap-4 pt-2">
+          <button type="submit" className="rounded bg-brand px-6 py-3 font-semibold text-paper hover:opacity-90">
+            {isEditing ? 'Save changes' : 'Publish hike'}
+          </button>
+          <Link to={cancelTo} className="underline underline-offset-4">
+            Cancel
+          </Link>
+        </div>
       </form>
     </div>
-  );
+  )
 }

@@ -58,7 +58,7 @@ export default function TrailDetail() {
         {upcoming.length === 0 ? (
           <p className="mt-2">
             No group hikes planned here yet.{' '}
-            <Link to="/group-hikes/new" className="underline underline-offset-4">
+            <Link to={`/group-hikes/new?trail=${trail.id}`} className="underline underline-offset-4">
               Organize one
             </Link>
           </p>

@@ -1,165 +1,137 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { FormError, FormField, inputClass } from '../components/FormField'
 
-export default function Register({ setUsers, users }) {
+export default function Register() {
+  const { register } = useAuth()
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  })
+  const [error, setError] = useState('')
+  const navigate = useNavigate()
 
   const handleChange = (e) => {
     // Clear error dynamically as the user types
-    if (error) setError("");
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+    if (error) setError('')
+    setFormData({ ...formData, [e.target.name]: e.target.value })
+  }
 
   const handleRegister = (e) => {
-    e.preventDefault();
+    e.preventDefault()
 
     // Always clear existing errors at the start of submission
-    setError("");
+    setError('')
 
-    const { name, email, password, confirmPassword } = formData;
+    const { name, email, password, confirmPassword } = formData
 
     // 1. Check for empty fields
-    if (
-      !name.trim() ||
-      !email.trim() ||
-      !password.trim() ||
-      !confirmPassword.trim()
-    ) {
-      setError("Please fill in all fields.");
-      return;
+    if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
+      setError('Please fill in all fields.')
+      return
     }
 
     // 2. Email format validation check
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
-      setError("Please enter a valid email address.");
-      return;
+      setError('Please enter a valid email address.')
+      return
     }
 
     // 3. Password match check
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
+      setError('Passwords do not match.')
+      return
     }
 
     // 4. Password length check
     if (password.length < 6) {
-      setError("Password must be at least 6 characters long.");
-      return;
+      setError('Password must be at least 6 characters long.')
+      return
     }
 
-    // 5. Success execution
-    const newUser = { id: Date.now().toString(), name, email, password };
-
-    if (typeof setUsers === "function") {
-      setUsers((prev) => [...(prev || []), newUser]);
+    // 5. Add the account to the mock users (fails if the email is taken)
+    if (!register({ name, email, password })) {
+      setError('An account with this email already exists. Log in instead.')
+      return
     }
 
-    alert("Registration successful! Please log in.");
-    navigate("/login");
-  };
+    // The Login page shows a confirmation and fills in the email
+    navigate('/login', { state: { registeredEmail: email.trim() } })
+  }
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4">
-      <div className="max-w-md w-full p-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
-        <div className="text-center mb-6">
-          <span className="text-3xl">🇱🇧</span>
-          <h2 className="text-2xl font-bold mt-2 text-gray-900 dark:text-white">
-            Join Lebanon Trails
-          </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Create an account to organize and join group hikes
-          </p>
+    <div className="flex min-h-[70vh] items-center justify-center px-4">
+      <div className="w-full max-w-md rounded-lg border border-ink/15 p-8 dark:border-stone/20">
+        <div className="mb-6 text-center">
+          <h1 className="text-3xl font-bold">Join Lebanon Trails</h1>
+          <p className="mt-1 text-sm opacity-80">Create an account to organize and join group hikes</p>
         </div>
 
-        {error && (
-          <div className="mb-4 p-3 text-sm text-red-700 bg-red-100 dark:bg-red-900/30 dark:text-red-400 rounded-lg">
-            {error}
-          </div>
-        )}
+        <FormError message={error} />
 
-        <form onSubmit={handleRegister} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Full Name
-            </label>
+        <form onSubmit={handleRegister} noValidate className="space-y-4">
+          <FormField id="register-name" label="Full name">
             <input
+              id="register-name"
               type="text"
               name="name"
+              autoComplete="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
-              placeholder="Jad Kassir"
+              className={inputClass}
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Email Address
-            </label>
+          </FormField>
+          <FormField id="register-email" label="Email address">
             <input
+              id="register-email"
               type="email"
               name="email"
+              autoComplete="email"
               value={formData.email}
               onChange={handleChange}
-              className="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+              className={inputClass}
               placeholder="user@example.com"
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Password
-            </label>
+          </FormField>
+          <FormField id="register-password" label="Password" hint="At least 6 characters">
             <input
+              id="register-password"
               type="password"
               name="password"
+              autoComplete="new-password"
               value={formData.password}
               onChange={handleChange}
-              className="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
-              placeholder="••••••••"
+              className={inputClass}
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Confirm Password
-            </label>
+          </FormField>
+          <FormField id="register-confirm" label="Confirm password">
             <input
+              id="register-confirm"
               type="password"
               name="confirmPassword"
+              autoComplete="new-password"
               value={formData.confirmPassword}
               onChange={handleChange}
-              className="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
-              placeholder="••••••••"
+              className={inputClass}
             />
-          </div>
+          </FormField>
 
-          <button
-            type="submit"
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-lg transition-colors shadow-md cursor-pointer"
-          >
-            Register Account
+          <button type="submit" className="w-full rounded bg-brand py-2.5 font-semibold text-paper hover:opacity-90">
+            Create account
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
-          Already have an account?{" "}
-          <Link
-            to="/login"
-            className="text-emerald-600 font-medium hover:underline"
-          >
-            Login here
+        <p className="mt-6 text-center text-sm">
+          Already have an account?{' '}
+          <Link to="/login" className="font-semibold underline underline-offset-4">
+            Log in here
           </Link>
         </p>
       </div>
     </div>
-  );
+  )
 }
