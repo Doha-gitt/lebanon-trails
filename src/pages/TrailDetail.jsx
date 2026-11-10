@@ -1,27 +1,13 @@
 import { Link, useParams } from 'react-router-dom'
-import { groupHikes, trails } from '../data/mockData'
+import { trails } from '../data/mockData'
+import { useHikes } from '../context/HikesContext'
+import Fact from '../components/Fact'
 import PhotoGallery from '../components/PhotoGallery'
-
-// '2026-12-05' -> '5 December 2026'
-function formatDate(date) {
-  return new Date(`${date}T00:00`).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
-}
-
-function Fact({ label, value }) {
-  return (
-    <div>
-      <dt className="text-sm opacity-75">{label}</dt>
-      <dd className="text-lg font-semibold">{value}</dd>
-    </div>
-  )
-}
+import { formatDate, spotsLeftText } from '../utils/format'
 
 export default function TrailDetail() {
   const { trailId } = useParams()
+  const { hikes } = useHikes()
   const trail = trails.find((item) => item.id === trailId)
 
   if (!trail) {
@@ -36,7 +22,10 @@ export default function TrailDetail() {
     )
   }
 
-  const upcoming = groupHikes.filter((hike) => hike.trailId === trail.id)
+  // Dates are 'YYYY-MM-DD', so sorting them as text puts them in date order.
+  const upcoming = hikes
+    .filter((hike) => hike.trailId === trail.id)
+    .sort((a, b) => a.date.localeCompare(b.date))
 
   return (
     <article className="pb-12">
@@ -75,22 +64,25 @@ export default function TrailDetail() {
           </p>
         ) : (
           <ul className="mt-3 max-w-2xl divide-y divide-ink/15 dark:divide-stone/20">
-            {upcoming.map((hike) => (
-              <li key={hike.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
-                <div>
-                  <p className="font-semibold">{formatDate(hike.date)}</p>
-                  <p className="text-sm">
-                    {hike.spotsTotal - hike.spotsTaken} of {hike.spotsTotal} spots left
-                  </p>
-                </div>
-                <Link
-                  to={`/group-hikes/${hike.id}`}
-                  className="rounded bg-brand px-4 py-2 font-semibold text-paper hover:opacity-90"
-                >
-                  View hike
-                </Link>
-              </li>
-            ))}
+            {upcoming.map((hike) => {
+              const spotsLeft = hike.spotsTotal - hike.spotsTaken
+              return (
+                <li key={hike.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                  <div>
+                    <p className="font-semibold">{hike.title}</p>
+                    <p className="text-sm">
+                      {formatDate(hike.date)}, {spotsLeft > 0 ? spotsLeftText(spotsLeft) : 'full'}
+                    </p>
+                  </div>
+                  <Link
+                    to={`/group-hikes/${hike.id}`}
+                    className="rounded bg-brand px-4 py-2 font-semibold text-paper hover:opacity-90"
+                  >
+                    View hike
+                  </Link>
+                </li>
+              )
+            })}
           </ul>
         )}
       </section>
