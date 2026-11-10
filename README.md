@@ -11,7 +11,7 @@ Lebanon Trails is a website that provides access to various hiking trips around 
 - Organize a new group hike or edit an existing one
 - Light and dark mode, on phone, tablet and desktop
 
-**Live site:** https://lebanon-trails.surge.sh
+**Live site:** https://lebanon-trails-team.surge.sh
 **Repository:** https://github.com/Doha-gitt/lebanon-trails
 
 ## Team
