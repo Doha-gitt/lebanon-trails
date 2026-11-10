@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
 import { trails } from '../data/mockData'
 import { useHikes } from '../context/HikesContext'
 import Fact from '../components/Fact'
@@ -8,6 +8,8 @@ import { formatDate, formatDuration } from '../utils/format'
 export default function GroupHikeDetail() {
   const { hikeId } = useParams()
   const { hikes, joinedIds, joinHike, leaveHike } = useHikes()
+  // Set by the Organize/Edit form after saving: 'created' or 'updated'
+  const saved = useLocation().state?.saved
   const hike = hikes.find((item) => item.id === hikeId)
   const trail = hike && trails.find((item) => item.id === hike.trailId)
 
@@ -28,6 +30,12 @@ export default function GroupHikeDetail() {
       <Link to={`/trails/${trail.id}`} className="text-sm underline underline-offset-4">
         Back to {trail.name}
       </Link>
+
+      {saved && (
+        <p role="status" className="mt-4 rounded border border-olive/40 bg-olive/10 px-4 py-3 font-semibold">
+          {saved === 'created' ? 'Your hike is published. Share this page so people can join.' : 'Your changes are saved.'}
+        </p>
+      )}
 
       <header className="mt-4 grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] md:items-center md:gap-10">
         <img

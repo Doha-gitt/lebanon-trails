@@ -2,6 +2,14 @@
 // Trail names, regions and photos are real. Difficulty, distance and the
 // group hikes are placeholders: replace them with real information.
 
+// Mock user accounts for Login and Register. Pages should use useAuth() from
+// src/context/AuthContext.js rather than this array. Placeholder data only.
+export const users = [
+  { id: 'user-1', name: 'Doha', email: 'doha@example.com', password: 'trails123' },
+  { id: 'user-2', name: 'Sarah', email: 'sarah@example.com', password: 'trails123' },
+  { id: 'user-3', name: 'Tala', email: 'tala@example.com', password: 'trails123' },
+]
+
 // Builds the photo list for a trail. Files live in public/images/trails/<id>/1.jpg, 2.jpg, ...
 // Each entry in `alts` describes one photo (used as alt text and caption).
 function photos(id, alts) {

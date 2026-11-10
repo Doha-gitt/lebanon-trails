@@ -1,100 +1,98 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { FormError, FormField, inputClass } from '../components/FormField'
 
-export default function Login({ setIsLoggedIn, setCurrentUser }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
+export default function Login() {
+  const { login } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
+  // Set by the Register page after a new account is created
+  const registeredEmail = location.state?.registeredEmail
+
+  const [email, setEmail] = useState(registeredEmail ?? '')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
 
   const handleChangeEmail = (e) => {
-    if (error) setError("");
-    setEmail(e.target.value);
-  };
+    if (error) setError('')
+    setEmail(e.target.value)
+  }
 
   const handleChangePassword = (e) => {
-    if (error) setError("");
-    setPassword(e.target.value);
-  };
+    if (error) setError('')
+    setPassword(e.target.value)
+  }
 
   const handleLogin = (e) => {
-    e.preventDefault();
-    setError("");
+    e.preventDefault()
+    setError('')
 
     if (!email.trim() || !password.trim()) {
-      setError("Please enter both email and password.");
-      return;
+      setError('Please enter both email and password.')
+      return
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
-      setError("Please enter a valid email address.");
-      return;
+      setError('Please enter a valid email address.')
+      return
     }
 
-    // Simulate login success
-    if (typeof setIsLoggedIn === "function") {
-      setIsLoggedIn(true);
-    }
-    if (typeof setCurrentUser === "function") {
-      setCurrentUser({ email, name: email.split("@")[0] });
+    // Check the email and password against the mock user accounts
+    if (!login(email, password)) {
+      setError('Email or password is incorrect.')
+      return
     }
 
-    // Ensure route exists in App.jsx
-    navigate("/trails");
-  };
+    navigate('/trails')
+  }
 
   return (
-    <div className="max-w-md mx-auto mt-12 p-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
-      <h2 className="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">
-        Login to Lebanon Trails
-      </h2>
-      {error && (
-        <div className="mb-4 p-3 text-sm text-red-700 bg-red-100 rounded-lg">
-          {error}
-        </div>
+    <div className="mx-auto mt-12 max-w-md rounded-lg border border-ink/15 p-8 dark:border-stone/20">
+      <h1 className="mb-6 text-center text-3xl font-bold">Log in to Lebanon Trails</h1>
+
+      {registeredEmail && !error && (
+        <p role="status" className="mb-5 rounded border border-olive/40 bg-olive/10 px-4 py-3">
+          Your account is ready. Log in with your new password.
+        </p>
       )}
-      <form onSubmit={handleLogin} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Email Address
-          </label>
+      <FormError message={error} />
+
+      <form onSubmit={handleLogin} noValidate className="space-y-4">
+        <FormField id="login-email" label="Email address">
           <input
+            id="login-email"
             type="email"
+            autoComplete="email"
             value={email}
             onChange={handleChangeEmail}
-            className="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-emerald-500 outline-none"
+            className={inputClass}
             placeholder="user@example.com"
           />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Password
-          </label>
+        </FormField>
+        <FormField id="login-password" label="Password">
           <input
+            id="login-password"
             type="password"
+            autoComplete="current-password"
             value={password}
             onChange={handleChangePassword}
-            className="w-full p-2.5 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-emerald-500 outline-none"
-            placeholder="••••••••"
+            className={inputClass}
           />
-        </div>
-        <button
-          type="submit"
-          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-lg transition-colors cursor-pointer"
-        >
-          Login
+        </FormField>
+        <button type="submit" className="w-full rounded bg-brand py-2.5 font-semibold text-paper hover:opacity-90">
+          Log in
         </button>
       </form>
-      <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
-        Don't have an account?{" "}
-        <Link
-          to="/register"
-          className="text-emerald-600 font-medium hover:underline"
-        >
+
+      <p className="mt-4 text-center text-sm">
+        Don't have an account?{' '}
+        <Link to="/register" className="font-semibold underline underline-offset-4">
           Register here
         </Link>
       </p>
+      <p className="mt-2 text-center text-sm opacity-75">Demo account: doha@example.com, password trails123</p>
     </div>
-  );
+  )
 }
