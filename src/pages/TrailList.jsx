@@ -24,27 +24,23 @@ const bannerTrail = trails.find((trail) => trail.id === 'yahshoush')
 // One card for one trail (same design as the Home page). It receives the trail's info as props.
 function TrailCard({ id, name, region, difficulty, distanceKm, description, cover }) {
   return (
-    <Link
-      to={`/trails/${id}`}
-      className="group relative block h-96 overflow-hidden rounded-2xl shadow-lg transition duration-300 hover:-translate-y-2 hover:shadow-2xl"
-    >
+    <Link to={`/trails/${id}`} className="group relative block h-96 overflow-hidden rounded-lg">
       <img
         src={cover.src}
         alt={cover.alt}
-        className="h-full w-full object-cover transition duration-700 group-hover:scale-110"
+        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-      <span className="absolute left-4 top-4 rounded-full bg-paper px-3 py-1 text-xs font-bold text-ink">
+      <span className="absolute left-4 top-4 rounded bg-paper px-2 py-0.5 text-sm font-semibold text-ink">
         {difficulty}
       </span>
-      <span className="absolute right-4 top-4 rounded-full bg-brand px-3 py-1 text-xs font-bold text-paper">
+      <span className="absolute right-4 top-4 rounded bg-brand px-2 py-0.5 text-sm font-semibold text-paper">
         {distanceKm} km
       </span>
       <div className="absolute bottom-0 p-5 text-paper">
-        <p className="text-sm uppercase tracking-wider opacity-90">{region}</p>
         <h3 className="text-2xl font-bold text-paper">{name}</h3>
+        <p className="text-sm opacity-90">{region}</p>
         <p className="mt-2 text-sm opacity-90">{description}</p>
-        <p className="mt-3 text-sm font-bold">View trail →</p>
       </div>
     </Link>
   )
@@ -144,12 +140,11 @@ export default function TrailList() {
   return (
     <>
       {/* BANNER */}
-      <section className="relative h-72 overflow-hidden rounded-3xl shadow-2xl md:h-80">
+      <section className="relative h-72 overflow-hidden rounded-lg md:h-80">
         <img src={bannerTrail.cover.src} alt={bannerTrail.cover.alt} className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
         <div className="absolute inset-0 flex flex-col justify-center p-6 md:p-14">
-          <p className="text-sm font-bold uppercase tracking-[0.3em] text-paper opacity-90">Explore</p>
-          <h1 className="mt-3 text-4xl font-extrabold text-paper md:text-6xl">All Trails</h1>
+          <h1 className="text-4xl font-extrabold text-paper md:text-6xl">All trails</h1>
           <p className="mt-3 max-w-lg text-lg text-paper">
             {trails.length} trails across {regions.length} regions. Filter by region, difficulty and length.
           </p>
@@ -159,11 +154,11 @@ export default function TrailList() {
       {/* FILTERS: card overlapping the bottom of the banner */}
       <section
         aria-label="Filter trails"
-        className="relative z-10 mx-2 -mt-10 rounded-2xl bg-paper p-5 shadow-xl md:mx-8 md:p-6 dark:bg-olive"
+        className="relative z-10 mx-2 -mt-10 rounded-lg border border-ink/10 bg-paper p-5 md:mx-8 md:p-6 dark:border-stone/20 dark:bg-olive"
       >
         {/* Search box */}
-        <label htmlFor="search" className="text-xs font-bold uppercase tracking-widest">
-          Search
+        <label htmlFor="search" className="font-semibold">
+          Search trails
         </label>
         <div className="relative mt-2">
           <input
@@ -186,7 +181,7 @@ export default function TrailList() {
             aria-controls="search-suggestions"
             aria-autocomplete="list"
             aria-activedescendant={activeIndex >= 0 ? `suggestion-${suggestions[activeIndex].id}` : undefined}
-            className="w-full rounded-full border-2 border-olive/30 bg-stone px-5 py-3 text-ink outline-none focus:border-brand dark:bg-earth dark:text-stone"
+            className="w-full rounded border border-olive/40 bg-stone px-4 py-3 text-ink focus:outline-2 focus:outline-offset-1 focus:outline-brand dark:bg-earth dark:text-stone dark:focus:outline-stone"
           />
 
           {/* Suggestion list: appears under the box while typing */}
@@ -194,7 +189,7 @@ export default function TrailList() {
             <ul
               id="search-suggestions"
               role="listbox"
-              className="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-2xl bg-paper shadow-2xl ring-1 ring-olive/20 dark:bg-earth"
+              className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-lg bg-paper shadow-lg ring-1 ring-olive/20 dark:bg-earth"
             >
               {suggestions.length > 0 ? (
                 suggestions.map((trail, index) => (
@@ -213,11 +208,11 @@ export default function TrailList() {
                       index === activeIndex ? 'bg-stone dark:bg-olive' : ''
                     }`}
                   >
-                    <img src={trail.cover.src} alt="" className="h-10 w-10 rounded-lg object-cover" />
+                    <img src={trail.cover.src} alt="" className="h-10 w-10 rounded object-cover" />
                     <div>
                       <p className="font-bold">{trail.name}</p>
-                      <p className="text-xs opacity-75">
-                        {trail.region} · {trail.difficulty} · {trail.distanceKm} km
+                      <p className="text-sm opacity-75">
+                        {trail.region}, {trail.difficulty.toLowerCase()}, {trail.distanceKm} km
                       </p>
                     </div>
                   </li>
@@ -234,14 +229,14 @@ export default function TrailList() {
         <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-3">
           {/* Region dropdown */}
           <div>
-            <label htmlFor="region" className="text-xs font-bold uppercase tracking-widest">
+            <label htmlFor="region" className="font-semibold">
               Region
             </label>
             <select
               id="region"
               value={region}
               onChange={(e) => setRegion(e.target.value)}
-              className="mt-2 w-full rounded-full border-2 border-olive/30 bg-stone px-4 py-2 text-ink focus:border-brand dark:bg-earth dark:text-stone"
+              className="mt-2 w-full rounded border border-olive/40 bg-stone px-3 py-2 text-ink focus:outline-2 focus:outline-offset-1 focus:outline-brand dark:bg-earth dark:text-stone dark:focus:outline-stone"
             >
               <option value="All">All regions</option>
               {regions.map((item) => (
@@ -254,14 +249,14 @@ export default function TrailList() {
 
           {/* Length dropdown */}
           <div>
-            <label htmlFor="length" className="text-xs font-bold uppercase tracking-widest">
+            <label htmlFor="length" className="font-semibold">
               Length
             </label>
             <select
               id="length"
               value={length}
               onChange={(e) => setLength(e.target.value)}
-              className="mt-2 w-full rounded-full border-2 border-olive/30 bg-stone px-4 py-2 text-ink focus:border-brand dark:bg-earth dark:text-stone"
+              className="mt-2 w-full rounded border border-olive/40 bg-stone px-3 py-2 text-ink focus:outline-2 focus:outline-offset-1 focus:outline-brand dark:bg-earth dark:text-stone dark:focus:outline-stone"
             >
               {lengths.map((item) => (
                 <option key={item.value} value={item.value}>
@@ -273,14 +268,14 @@ export default function TrailList() {
 
           {/* Sort dropdown */}
           <div>
-            <label htmlFor="sort" className="text-xs font-bold uppercase tracking-widest">
+            <label htmlFor="sort" className="font-semibold">
               Sort by
             </label>
             <select
               id="sort"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="mt-2 w-full rounded-full border-2 border-olive/30 bg-stone px-4 py-2 text-ink focus:border-brand dark:bg-earth dark:text-stone"
+              className="mt-2 w-full rounded border border-olive/40 bg-stone px-3 py-2 text-ink focus:outline-2 focus:outline-offset-1 focus:outline-brand dark:bg-earth dark:text-stone dark:focus:outline-stone"
             >
               <option value="name">Name (A–Z)</option>
               <option value="shortest">Shortest first</option>
@@ -289,12 +284,12 @@ export default function TrailList() {
           </div>
         </div>
 
-        {/* Difficulty tabs (same style as "Pick Your Level" on the Home page) */}
-        <p className="mt-5 text-xs font-bold uppercase tracking-widest" id="difficulty-label">
+        {/* Difficulty tabs (same style as "Pick your level" on the Home page) */}
+        <p className="mt-5 font-semibold" id="difficulty-label">
           Difficulty
         </p>
         <div
-          className="mt-2 flex w-fit gap-1 rounded-full bg-stone p-1 shadow-inner dark:bg-earth"
+          className="mt-2 flex w-fit gap-1 rounded-full bg-stone p-1 dark:bg-earth"
           role="group"
           aria-labelledby="difficulty-label"
         >
@@ -305,8 +300,8 @@ export default function TrailList() {
               aria-pressed={level === item}
               className={
                 level === item
-                  ? 'rounded-full bg-brand px-3 py-2 text-sm font-bold text-paper shadow sm:px-5 sm:text-base'
-                  : 'rounded-full px-3 py-2 text-sm font-bold transition hover:bg-paper sm:px-5 sm:text-base dark:hover:bg-olive'
+                  ? 'rounded-full bg-brand px-3 py-2 text-sm font-bold text-paper sm:px-5 sm:text-base'
+                  : 'rounded-full px-3 py-2 text-sm font-bold hover:bg-paper sm:px-5 sm:text-base dark:hover:bg-olive'
               }
             >
               {item}
@@ -318,16 +313,13 @@ export default function TrailList() {
       {/* RESULTS */}
       <section className="py-12">
         <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-[0.2em] text-olive dark:text-stone">Results</p>
-            <h2 className="mt-2 text-3xl font-extrabold md:text-4xl">
-              {results.length} {results.length === 1 ? 'trail' : 'trails'} found
-            </h2>
-          </div>
+          <h2 className="text-3xl font-extrabold md:text-4xl">
+            {results.length} {results.length === 1 ? 'trail' : 'trails'} found
+          </h2>
           {hasFilters && (
             <button
               onClick={resetFilters}
-              className="w-fit rounded-full border-2 border-brand px-6 py-2 font-bold text-brand transition hover:bg-brand hover:text-paper dark:border-stone dark:text-stone"
+              className="w-fit rounded border-2 border-brand px-6 py-2 font-bold text-brand hover:bg-brand hover:text-paper dark:border-stone dark:text-stone dark:hover:bg-stone dark:hover:text-earth"
             >
               Clear filters
             </button>
@@ -351,12 +343,12 @@ export default function TrailList() {
           </div>
         ) : (
           // Shown when no trail matches the filters
-          <div className="rounded-3xl bg-olive p-10 text-center text-paper shadow-xl">
+          <div className="rounded-lg bg-olive p-10 text-center text-paper">
             <h3 className="text-2xl font-extrabold text-paper">No trails match your filters</h3>
             <p className="mt-2 opacity-90">Try another name, region, difficulty or length.</p>
             <button
               onClick={resetFilters}
-              className="mt-6 rounded-full bg-paper px-8 py-3 font-bold text-ink transition hover:scale-105"
+              className="mt-6 rounded bg-paper px-8 py-3 font-bold text-ink hover:opacity-90"
             >
               Clear filters
             </button>
