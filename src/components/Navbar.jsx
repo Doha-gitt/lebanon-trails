@@ -1,6 +1,7 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
+import Logo from './Logo'
 
 const links = [
   { to: '/trails', label: 'Trails' },
@@ -30,7 +31,8 @@ export default function Navbar() {
   return (
     <header className="bg-olive text-paper">
       <nav className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 p-4">
-        <Link to="/" className="text-xl font-bold">
+        <Link to="/" className="flex items-center gap-2 text-xl font-bold">
+          <Logo />
           Lebanon Trails
         </Link>
         <div className="flex flex-wrap gap-x-4 gap-y-1">
