@@ -9,16 +9,16 @@ const links = [
 ]
 
 function linkClass({ isActive }) {
-  return isActive ? 'font-semibold text-brand dark:text-green-400' : 'hover:text-brand dark:hover:text-green-400'
+  return `underline-offset-4 ${isActive ? 'font-semibold underline' : 'hover:underline'}`
 }
 
 export default function Navbar() {
   const { isDark, toggleTheme } = useTheme()
 
   return (
-    <header className="border-b border-gray-200 dark:border-gray-700">
+    <header className="bg-olive text-paper">
       <nav className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 p-4">
-        <Link to="/" className="text-xl font-bold text-brand dark:text-green-400">
+        <Link to="/" className="text-xl font-bold">
           Lebanon Trails
         </Link>
         <div className="flex flex-wrap gap-x-4 gap-y-1">
@@ -31,7 +31,7 @@ export default function Navbar() {
         <button
           type="button"
           onClick={toggleTheme}
-          className="ml-auto rounded border border-gray-300 px-3 py-1 text-sm dark:border-gray-600"
+          className="ml-auto rounded border border-paper/60 px-3 py-1 text-sm hover:bg-paper hover:text-olive"
         >
           {isDark ? 'Light mode' : 'Dark mode'}
         </button>

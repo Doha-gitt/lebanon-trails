@@ -3,7 +3,26 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* Team colors live here (Tailwind v4 has no tailwind.config.js).
-   --color-brand gives you bg-brand, text-brand, border-brand, etc. */
+   Each one gives you bg-*, text-*, border-*, e.g. bg-olive, text-brand. */
 @theme {
-  --color-brand: #15803d;
+  --color-brand: #800020; /* burgundy: headings, buttons */
+  --color-olive: #5a6332; /* navbar */
+  --color-stone: #e2d6bd; /* light mode page, dark mode text */
+  --color-paper: #f1e9d6; /* text on olive or burgundy */
+  --color-ink: #2a1a14; /* light mode text */
+  --color-earth: #241c17; /* dark mode page */
+}
+
+@layer base {
+  h1,
+  h2,
+  h3 {
+    color: var(--color-brand);
+  }
+
+  .dark h1,
+  .dark h2,
+  .dark h3 {
+    color: var(--color-stone);
+  }
 }
