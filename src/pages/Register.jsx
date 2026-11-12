@@ -67,9 +67,9 @@ export default function Register() {
 
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-lg border border-ink/15 p-8 dark:border-stone/20">
+      <div className="surface w-full max-w-md p-8">
         <div className="mb-6 text-center">
-          <h1 className="text-3xl font-bold">Join Lebanon Trails</h1>
+          <h1 className="display-md">Create your account</h1>
           <p className="mt-1 text-sm opacity-80">Create an account to organize and join group hikes</p>
         </div>
 
@@ -122,7 +122,7 @@ export default function Register() {
             />
           </FormField>
 
-          <button type="submit" className="w-full rounded bg-brand py-2.5 font-semibold text-paper hover:opacity-90">
+          <button type="submit" className="btn btn-primary w-full">
             Create account
           </button>
         </form>
