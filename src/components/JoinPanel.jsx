@@ -1,7 +1,11 @@
+import { Link, useLocation } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import { spotsLeftText } from '../utils/format'
 
-// Shows how full a hike is and lets the visitor join or leave it.
+// Shows how full a hike is and lets a logged-in visitor join or leave it.
 export default function JoinPanel({ hike, isJoined, onJoin, onLeave }) {
+  const { currentUser } = useAuth()
+  const { pathname } = useLocation()
   const spotsLeft = hike.spotsTotal - hike.spotsTaken
   const isFull = spotsLeft <= 0
   const percentTaken = Math.round((hike.spotsTaken / hike.spotsTotal) * 100)
@@ -38,6 +42,14 @@ export default function JoinPanel({ hike, isJoined, onJoin, onLeave }) {
           </>
         ) : isFull ? (
           <p className="text-sm">All spots are taken. Check the trail page for other dates.</p>
+        ) : !currentUser ? (
+          <Link
+            to="/login"
+            state={{ from: pathname }}
+            className="block w-full rounded bg-brand px-4 py-2 text-center font-semibold text-paper hover:opacity-90"
+          >
+            Log in to join
+          </Link>
         ) : (
           <button
             type="button"

@@ -9,6 +9,8 @@ export default function Login() {
   const location = useLocation()
   // Set by the Register page after a new account is created
   const registeredEmail = location.state?.registeredEmail
+  // Set by RequireAuth (or the join button) when a page needs an account first
+  const from = location.state?.from
 
   const [email, setEmail] = useState(registeredEmail ?? '')
   const [password, setPassword] = useState('')
@@ -45,7 +47,7 @@ export default function Login() {
       return
     }
 
-    navigate('/trails')
+    navigate(from ?? '/trails', { replace: Boolean(from) })
   }
 
   return (
@@ -55,6 +57,11 @@ export default function Login() {
       {registeredEmail && !error && (
         <p role="status" className="mb-5 rounded border border-olive/40 bg-olive/10 px-4 py-3">
           Your account is ready. Log in with your new password.
+        </p>
+      )}
+      {from && !registeredEmail && !error && (
+        <p role="status" className="mb-5 rounded border border-olive/40 bg-olive/10 px-4 py-3">
+          Please log in to continue.
         </p>
       )}
       <FormError message={error} />
@@ -88,7 +95,7 @@ export default function Login() {
 
       <p className="mt-4 text-center text-sm">
         Don't have an account?{' '}
-        <Link to="/register" className="font-semibold underline underline-offset-4">
+        <Link to="/register" state={{ from }} className="font-semibold underline underline-offset-4">
           Register here
         </Link>
       </p>

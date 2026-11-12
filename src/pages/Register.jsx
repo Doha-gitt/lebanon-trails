@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { FormError, FormField, inputClass } from '../components/FormField'
 
@@ -13,6 +13,8 @@ export default function Register() {
   })
   const [error, setError] = useState('')
   const navigate = useNavigate()
+  // Page to return to after logging in, passed along from the Login page
+  const from = useLocation().state?.from
 
   const handleChange = (e) => {
     // Clear error dynamically as the user types
@@ -60,7 +62,7 @@ export default function Register() {
     }
 
     // The Login page shows a confirmation and fills in the email
-    navigate('/login', { state: { registeredEmail: email.trim() } })
+    navigate('/login', { state: { registeredEmail: email.trim(), from } })
   }
 
   return (
