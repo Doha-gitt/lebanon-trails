@@ -1,6 +1,8 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { trails } from '../data/mockData'
+import TrailCard from '../components/TrailCard'
+import Contour from '../components/Contour'
 
 const levels = ['All', 'Easy', 'Moderate', 'Hard']
 
@@ -18,38 +20,22 @@ const regions = trails
   .filter((region, index, all) => all.indexOf(region) === index)
   .sort()
 
-// Banner photo at the top of the page.
-const bannerTrail = trails.find((trail) => trail.id === 'yahshoush')
-
-// One card for one trail (same design as the Home page). It receives the trail's info as props.
-function TrailCard({ id, name, region, difficulty, distanceKm, description, cover }) {
-  return (
-    <Link to={`/trails/${id}`} className="group relative block h-96 overflow-hidden rounded-lg">
-      <img
-        src={cover.src}
-        alt={cover.alt}
-        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-      <span className="absolute left-4 top-4 rounded bg-paper px-2 py-0.5 text-sm font-semibold text-ink">
-        {difficulty}
-      </span>
-      <span className="absolute right-4 top-4 rounded bg-brand px-2 py-0.5 text-sm font-semibold text-paper">
-        {distanceKm} km
-      </span>
-      <div className="absolute bottom-0 p-5 text-paper">
-        <h3 className="text-2xl font-bold text-paper">{name}</h3>
-        <p className="text-sm opacity-90">{region}</p>
-        <p className="mt-2 text-sm opacity-90">{description}</p>
-      </div>
-    </Link>
-  )
-}
-
 export default function TrailList() {
+  // The region lives in the address bar (/trails?region=Chouf) so the Home page
+  // can link straight to it and a filtered list can be shared or bookmarked.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const regionParam = searchParams.get('region')
+  const region = regions.includes(regionParam) ? regionParam : 'All'
+
+  function setRegion(value) {
+    const next = new URLSearchParams(searchParams)
+    if (value === 'All') next.delete('region')
+    else next.set('region', value)
+    setSearchParams(next, { replace: true })
+  }
+
   // Filter values chosen by the visitor
   const [search, setSearch] = useState('')
-  const [region, setRegion] = useState('All')
   const [level, setLevel] = useState('All')
   const [length, setLength] = useState('all')
   const [sortBy, setSortBy] = useState('name')
@@ -81,7 +67,8 @@ export default function TrailList() {
           .slice(0, 6)
 
   // Open the list only while typing, and hide it if the text already equals a trail name exactly.
-  const listOpen = showSuggestions && query !== '' && !trails.some((trail) => trail.name.toLowerCase() === query)
+  const listOpen =
+    showSuggestions && query !== '' && !trails.some((trail) => trail.name.toLowerCase() === query)
 
   // Put the clicked suggestion in the search box and close the list.
   function pickSuggestion(trail) {
@@ -139,25 +126,22 @@ export default function TrailList() {
 
   return (
     <>
-      {/* BANNER */}
-      <section className="relative h-72 overflow-hidden rounded-lg md:h-80">
-        <img src={bannerTrail.cover.src} alt={bannerTrail.cover.alt} className="h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
-        <div className="absolute inset-0 flex flex-col justify-center p-6 md:p-14">
-          <h1 className="text-4xl font-extrabold text-paper md:text-6xl">All trails</h1>
-          <p className="mt-3 max-w-lg text-lg text-paper">
-            {trails.length} trails across {regions.length} regions. Filter by region, difficulty and length.
+      {/* This page is an index, not a brochure: it opens with the list's own
+          scope rather than another large photograph. */}
+      <section className="relative pb-8 pt-12">
+        <Contour className="absolute inset-x-0 top-6 h-16 w-full text-brand/40 dark:text-limestone/60" />
+        <div className="relative">
+          <h1 className="display-lg">All trails</h1>
+          <p className="prose-measure mt-3 text-lg opacity-80">
+            Every walk in the collection, from {regions.length} regions. Narrow it down by where you
+            are, how hard you want it, and how far you want to go.
           </p>
         </div>
       </section>
 
-      {/* FILTERS: card overlapping the bottom of the banner */}
-      <section
-        aria-label="Filter trails"
-        className="relative z-10 mx-2 -mt-10 rounded-lg border border-ink/10 bg-paper p-5 md:mx-8 md:p-6 dark:border-stone/20 dark:bg-olive"
-      >
-        {/* Search box */}
-        <label htmlFor="search" className="font-semibold">
+      {/* FILTERS */}
+      <section aria-label="Filter trails" className="surface p-5 md:p-6">
+        <label htmlFor="search" className="text-sm font-semibold">
           Search trails
         </label>
         <div className="relative mt-2">
@@ -180,8 +164,10 @@ export default function TrailList() {
             aria-expanded={listOpen}
             aria-controls="search-suggestions"
             aria-autocomplete="list"
-            aria-activedescendant={activeIndex >= 0 ? `suggestion-${suggestions[activeIndex].id}` : undefined}
-            className="w-full rounded border border-olive/40 bg-stone px-4 py-3 text-ink focus:outline-2 focus:outline-offset-1 focus:outline-brand dark:bg-earth dark:text-stone dark:focus:outline-stone"
+            aria-activedescendant={
+              activeIndex >= 0 ? `suggestion-${suggestions[activeIndex].id}` : undefined
+            }
+            className="field"
           />
 
           {/* Suggestion list: appears under the box while typing */}
@@ -189,7 +175,7 @@ export default function TrailList() {
             <ul
               id="search-suggestions"
               role="listbox"
-              className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-lg bg-paper shadow-lg ring-1 ring-olive/20 dark:bg-earth"
+              className="surface absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden shadow-xl"
             >
               {suggestions.length > 0 ? (
                 suggestions.map((trail, index) => (
@@ -204,21 +190,30 @@ export default function TrailList() {
                       pickSuggestion(trail)
                     }}
                     onMouseEnter={() => setActiveIndex(index)}
-                    className={`flex cursor-pointer items-center gap-3 px-4 py-2 ${
-                      index === activeIndex ? 'bg-stone dark:bg-olive' : ''
+                    className={`flex cursor-pointer items-center gap-3 px-3 py-2 ${
+                      index === activeIndex ? 'bg-ink/8 dark:bg-stone/10' : ''
                     }`}
                   >
-                    <img src={trail.cover.src} alt="" className="h-10 w-10 rounded object-cover" />
+                    <img
+                      src={trail.cover.src}
+                      alt=""
+                      className="h-9 w-9 rounded-[2px] object-cover"
+                    />
                     <div>
-                      <p className="font-bold">{trail.name}</p>
-                      <p className="text-sm opacity-75">
+                      <p className="font-display font-semibold">{trail.name}</p>
+                      <p className="tabular label-map">
                         {trail.region}, {trail.difficulty.toLowerCase()}, {trail.distanceKm} km
                       </p>
                     </div>
                   </li>
                 ))
               ) : (
-                <li className="px-4 py-3 text-sm" role="option" aria-selected="false" aria-disabled="true">
+                <li
+                  className="px-3 py-3 text-sm"
+                  role="option"
+                  aria-selected="false"
+                  aria-disabled="true"
+                >
                   No trail or region matches “{search.trim()}”
                 </li>
               )}
@@ -226,17 +221,16 @@ export default function TrailList() {
           )}
         </div>
 
-        <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-3">
-          {/* Region dropdown */}
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
           <div>
-            <label htmlFor="region" className="font-semibold">
+            <label htmlFor="region" className="text-sm font-semibold">
               Region
             </label>
             <select
               id="region"
               value={region}
               onChange={(e) => setRegion(e.target.value)}
-              className="mt-2 w-full rounded border border-olive/40 bg-stone px-3 py-2 text-ink focus:outline-2 focus:outline-offset-1 focus:outline-brand dark:bg-earth dark:text-stone dark:focus:outline-stone"
+              className="field mt-2"
             >
               <option value="All">All regions</option>
               {regions.map((item) => (
@@ -247,16 +241,15 @@ export default function TrailList() {
             </select>
           </div>
 
-          {/* Length dropdown */}
           <div>
-            <label htmlFor="length" className="font-semibold">
+            <label htmlFor="length" className="text-sm font-semibold">
               Length
             </label>
             <select
               id="length"
               value={length}
               onChange={(e) => setLength(e.target.value)}
-              className="mt-2 w-full rounded border border-olive/40 bg-stone px-3 py-2 text-ink focus:outline-2 focus:outline-offset-1 focus:outline-brand dark:bg-earth dark:text-stone dark:focus:outline-stone"
+              className="field mt-2"
             >
               {lengths.map((item) => (
                 <option key={item.value} value={item.value}>
@@ -266,16 +259,15 @@ export default function TrailList() {
             </select>
           </div>
 
-          {/* Sort dropdown */}
           <div>
-            <label htmlFor="sort" className="font-semibold">
+            <label htmlFor="sort" className="text-sm font-semibold">
               Sort by
             </label>
             <select
               id="sort"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="mt-2 w-full rounded border border-olive/40 bg-stone px-3 py-2 text-ink focus:outline-2 focus:outline-offset-1 focus:outline-brand dark:bg-earth dark:text-stone dark:focus:outline-stone"
+              className="field mt-2"
             >
               <option value="name">Name (A–Z)</option>
               <option value="shortest">Shortest first</option>
@@ -284,12 +276,11 @@ export default function TrailList() {
           </div>
         </div>
 
-        {/* Difficulty tabs (same style as "Pick your level" on the Home page) */}
-        <p className="mt-5 font-semibold" id="difficulty-label">
+        <p className="mt-4 text-sm font-semibold" id="difficulty-label">
           Difficulty
         </p>
         <div
-          className="mt-2 flex w-fit gap-1 rounded-full bg-stone p-1 dark:bg-earth"
+          className="mt-2 flex w-fit gap-1 rounded-full border border-ink/12 p-1 dark:border-stone/15"
           role="group"
           aria-labelledby="difficulty-label"
         >
@@ -300,8 +291,8 @@ export default function TrailList() {
               aria-pressed={level === item}
               className={
                 level === item
-                  ? 'rounded-full bg-brand px-3 py-2 text-sm font-bold text-paper sm:px-5 sm:text-base'
-                  : 'rounded-full px-3 py-2 text-sm font-bold hover:bg-paper sm:px-5 sm:text-base dark:hover:bg-olive'
+                  ? 'rounded-full bg-brand px-4 py-1.5 text-sm font-semibold text-paper sm:px-5 dark:bg-ember'
+                  : 'rounded-full px-4 py-1.5 text-sm font-semibold opacity-75 transition hover:opacity-100 sm:px-5'
               }
             >
               {item}
@@ -311,15 +302,16 @@ export default function TrailList() {
       </section>
 
       {/* RESULTS */}
-      <section className="py-12">
-        <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
-          <h2 className="text-3xl font-extrabold md:text-4xl">
-            {results.length} {results.length === 1 ? 'trail' : 'trails'} found
+      <section className="pt-10">
+        <div className="mb-6 flex flex-wrap items-baseline justify-between gap-4 border-b border-ink/12 pb-4 dark:border-stone/12">
+          <h2 className="tabular text-[0.9375rem] font-semibold">
+            {results.length} {results.length === 1 ? 'trail' : 'trails'}
+            {region !== 'All' && ` in ${region}`}
           </h2>
           {hasFilters && (
             <button
               onClick={resetFilters}
-              className="w-fit rounded border-2 border-brand px-6 py-2 font-bold text-brand hover:bg-brand hover:text-paper dark:border-stone dark:text-stone dark:hover:bg-stone dark:hover:text-earth"
+              className="text-sm font-semibold underline decoration-1 underline-offset-4 hover:text-brand dark:hover:text-ember"
             >
               Clear filters
             </button>
@@ -327,29 +319,19 @@ export default function TrailList() {
         </div>
 
         {results.length > 0 ? (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {results.map((trail) => (
-              <TrailCard
-                key={trail.id}
-                id={trail.id}
-                name={trail.name}
-                region={trail.region}
-                difficulty={trail.difficulty}
-                distanceKm={trail.distanceKm}
-                description={trail.description}
-                cover={trail.cover}
-              />
+              <TrailCard key={trail.id} trail={trail} />
             ))}
           </div>
         ) : (
           // Shown when no trail matches the filters
-          <div className="rounded-lg bg-olive p-10 text-center text-paper">
-            <h3 className="text-2xl font-extrabold text-paper">No trails match your filters</h3>
-            <p className="mt-2 opacity-90">Try another name, region, difficulty or length.</p>
-            <button
-              onClick={resetFilters}
-              className="mt-6 rounded bg-paper px-8 py-3 font-bold text-ink hover:opacity-90"
-            >
+          <div className="surface px-6 py-14 text-center">
+            <h3 className="display-md">Nothing matches those filters</h3>
+            <p className="prose-measure mx-auto mt-2 opacity-80">
+              Try a wider region or a different length.
+            </p>
+            <button onClick={resetFilters} className="btn btn-primary mt-6">
               Clear filters
             </button>
           </div>

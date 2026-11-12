@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { trails } from '../data/mockData'
 import { useHikes } from '../context/HikesContext'
 import { spotsLeftText } from '../utils/format'
+import TrailCard from '../components/TrailCard'
+import Contour from '../components/Contour'
 
 const levels = ['Easy', 'Moderate', 'Hard']
 
@@ -17,7 +19,7 @@ const regionTiles = regions.map((region) => {
   return { name: region, count: regionTrails.length, cover: regionTrails[0].cover }
 })
 
-// Trails shown in the big slider at the top of the page.
+// Trails shown in the big photo at the top of the page.
 const slideIds = ['qornet-es-sawda', 'chouwen', 'jezzine', 'barouk', 'yahshoush']
 const slides = trails.filter((trail) => slideIds.includes(trail.id))
 
@@ -29,64 +31,57 @@ const tips = [
   'Leave no trace: take your trash back with you',
 ]
 
-// Title + short sentence, used at the top of every section.
-function SectionTitle({ title, text }) {
+// Section heading. The explanatory line is optional and only used where it
+// actually tells the reader something they could not guess.
+function SectionTitle({ title, text, children }) {
   return (
-    <div className="mb-8">
-      <h2 className="text-3xl font-extrabold md:text-4xl">{title}</h2>
-      {text && <p className="mt-2 max-w-2xl opacity-80">{text}</p>}
+    <div className="mb-7 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+      <div>
+        <h2 className="display-lg">{title}</h2>
+        {text && <p className="prose-measure mt-2 opacity-80">{text}</p>}
+      </div>
+      {children}
     </div>
   )
 }
 
-// One card for one trail. It receives the trail's info as props.
-function TrailCard({ id, name, region, difficulty, distanceKm, cover }) {
-  return (
-    <Link to={`/trails/${id}`} className="group relative block h-80 overflow-hidden rounded-lg">
-      <img
-        src={cover.src}
-        alt={cover.alt}
-        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
-      <span className="absolute left-4 top-4 rounded bg-paper px-2 py-0.5 text-sm font-semibold text-ink">
-        {difficulty}
-      </span>
-      <div className="absolute bottom-0 p-5 text-paper">
-        <h3 className="text-2xl font-bold text-paper">{name}</h3>
-        <p className="mt-1 text-sm">
-          {region}, {distanceKm} km
-        </p>
-      </div>
-    </Link>
-  )
-}
-
-// One upcoming group hike, shown like an event ticket. It receives the hike's info as props.
+// One upcoming group hike. The bar shows how full it is.
 function HikeCard({ id, title, date, startTime, guide, spotsTotal, spotsTaken }) {
   const day = new Date(`${date}T00:00`)
   const spotsLeft = spotsTotal - spotsTaken
   const percentFull = Math.round((spotsTaken / spotsTotal) * 100)
+  const full = spotsLeft <= 0
 
   return (
-    <article className="flex overflow-hidden rounded-lg bg-paper dark:bg-olive">
-      {/* Date block */}
-      <div className="flex w-20 shrink-0 flex-col items-center justify-center bg-brand text-paper">
-        <span className="text-3xl font-extrabold">{day.getDate()}</span>
-        <span className="text-sm">{day.toLocaleDateString('en-GB', { month: 'short' })}</span>
+    <article className="surface flex flex-col p-5">
+      <div className="flex items-baseline justify-between gap-4">
+        <time dateTime={date} className="tabular text-sm font-semibold">
+          {day.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}
+        </time>
+        <span className="tabular label-map">{startTime}</span>
       </div>
-      <div className="flex flex-1 flex-col p-4">
-        <h3 className="text-lg font-bold">{title}</h3>
-        <p className="text-sm opacity-80">
-          Starts {startTime}, led by {guide}
-        </p>
-        {/* Bar that fills up as people join */}
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-stone dark:bg-earth" aria-hidden="true">
-          <div className="h-full rounded-full bg-brand dark:bg-stone" style={{ width: `${percentFull}%` }} />
+
+      <h3 className="display-md mt-3 text-xl">{title}</h3>
+      <p className="label-map mt-1">Led by {guide}</p>
+
+      <div className="mt-auto pt-6">
+        <div
+          className="h-1 overflow-hidden rounded-full bg-ink/15 dark:bg-stone/15"
+          aria-hidden="true"
+        >
+          <div
+            className="h-full rounded-full bg-brand dark:bg-ember"
+            style={{ width: `${percentFull}%` }}
+          />
         </div>
-        <div className="mt-3 flex items-center justify-between">
-          <span className="text-sm font-semibold">{spotsLeft > 0 ? spotsLeftText(spotsLeft) : 'Full'}</span>
-          <Link to={`/group-hikes/${id}`} className="text-sm font-bold underline underline-offset-4">
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <span className={`tabular text-sm ${full ? 'opacity-60' : 'font-semibold'}`}>
+            {full ? 'Full' : spotsLeftText(spotsLeft)}
+          </span>
+          <Link
+            to={`/group-hikes/${id}`}
+            className="text-sm font-semibold underline decoration-1 underline-offset-4 hover:text-brand dark:hover:text-ember"
+          >
             View hike
           </Link>
         </div>
@@ -96,7 +91,7 @@ function HikeCard({ id, title, date, startTime, guide, spotsTotal, spotsTaken })
 }
 
 export default function Home() {
-  // Which slide of the top slider is showing (0 = first)
+  // Which photo of the top slider is showing (0 = first)
   const [slide, setSlide] = useState(0)
   // Which difficulty the visitor picked in "Pick your level"
   const [level, setLevel] = useState('Easy')
@@ -109,100 +104,97 @@ export default function Home() {
   // The three soonest hikes (dates are 'YYYY-MM-DD', so text order is date order)
   const upcoming = [...hikes].sort((a, b) => a.date.localeCompare(b.date)).slice(0, 3)
 
-  // Go to the next / previous slide, looping around at the ends.
-  function nextSlide() {
-    setSlide((s) => (s + 1) % slides.length)
-  }
-  function prevSlide() {
-    setSlide((s) => (s - 1 + slides.length) % slides.length)
-  }
-
   return (
     <>
-      {/* HERO: big photo slider */}
-      <section className="relative h-[40rem] overflow-hidden rounded-lg md:h-[38rem]">
-        <img key={current.id} src={current.cover.src} alt={current.cover.alt} className="h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
+      {/* HERO: one large photograph, with the title set in a solid panel that
+          sits on it like the title cartouche on an old survey map. Nothing is
+          printed directly over the picture. */}
+      <section className="bleed">
+        <div className="relative h-[40vh] min-h-[260px] sm:h-[54vh] sm:max-h-[560px]">
+          <img
+            key={current.id}
+            src={current.cover.src}
+            alt={current.cover.alt}
+            // Favour the land over the sky: most of these photographs put the
+            // ridgeline in the lower half of the frame.
+            className="h-full w-full object-cover object-[center_62%]"
+          />
 
-        <div className="absolute inset-0 flex flex-col justify-start p-6 pt-12 md:justify-center md:p-14">
-          <h1 className="max-w-2xl text-4xl font-extrabold leading-tight text-paper md:text-7xl">
-            Discover Lebanon on foot
-          </h1>
-          <p className="mt-4 max-w-lg text-lg text-paper">
-            {trails.length} trails across {regions.length} regions. Pick one, join a group, and go.
-          </p>
-          <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-            <Link to="/trails" className="rounded bg-brand px-8 py-3 text-center font-bold text-paper hover:opacity-90">
-              Browse trails
-            </Link>
+          {/* Which trail this photograph is from, plus the slide picker.
+              Top right, where a map keeps its legend, clear of the panel below. */}
+          <div className="absolute right-4 top-4 flex items-center gap-4 rounded-full bg-earth/80 px-4 py-2 text-paper backdrop-blur-sm sm:right-6">
             <Link
-              to="/group-hikes/new"
-              className="rounded border-2 border-paper px-8 py-3 text-center font-bold text-paper hover:bg-paper hover:text-ink"
+              to={`/trails/${current.id}`}
+              className="text-[0.8125rem] hover:underline hover:underline-offset-4"
             >
-              Organize a hike
-            </Link>
-          </div>
-        </div>
-
-        {/* Slider controls: which trail is showing + arrows + dots */}
-        <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between gap-4 px-6 pb-16 md:px-14">
-          <Link to={`/trails/${current.id}`} className="text-paper">
-            <span className="block text-sm opacity-80">Photo from</span>
-            <span className="block text-lg font-bold underline underline-offset-4">
               {current.name}, {current.region}
-            </span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <div className="hidden gap-2 sm:flex">
+            </Link>
+            <span className="flex items-center gap-1.5">
               {slides.map((item, index) => (
                 <button
                   key={item.id}
                   onClick={() => setSlide(index)}
                   aria-label={`Show ${item.name}`}
                   aria-current={index === slide}
-                  className={index === slide ? 'h-3 w-8 rounded-full bg-paper' : 'h-3 w-3 rounded-full bg-paper/50'}
+                  className={
+                    index === slide
+                      ? 'h-1.5 w-5 rounded-full bg-paper transition-all'
+                      : 'h-1.5 w-1.5 rounded-full bg-paper/45 transition-all hover:bg-paper/80'
+                  }
                 />
               ))}
+            </span>
+          </div>
+        </div>
+
+        {/* The title panel spans the full column so the photograph ends on one
+            clean horizontal line, the way a map's title block meets its edge. */}
+        <div className="relative z-10 -mt-12 bg-stone sm:-mt-20 dark:bg-earth">
+          <div className="mx-auto max-w-6xl px-4 pt-8 sm:px-6 sm:pt-11">
+            <h1 className="display-xl max-w-4xl">Walk the mountain that made Lebanon</h1>
+            <p className="prose-measure mt-5 text-lg opacity-85">
+              Cedar ridges, river gorges and Roman stone, from the coast to Qornet es Sawda.
+              Find a trail that fits your legs, then walk it with other people.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link to="/trails" className="btn btn-primary">
+                Browse trails
+              </Link>
+              <Link to="/group-hikes/new" className="btn btn-outline">
+                Organize a hike
+              </Link>
             </div>
-            <button
-              onClick={prevSlide}
-              aria-label="Previous trail"
-              className="h-11 w-11 rounded-full bg-paper/20 text-xl text-paper hover:bg-paper hover:text-ink"
-            >
-              ‹
-            </button>
-            <button
-              onClick={nextSlide}
-              aria-label="Next trail"
-              className="h-11 w-11 rounded-full bg-paper/20 text-xl text-paper hover:bg-paper hover:text-ink"
-            >
-              ›
-            </button>
           </div>
         </div>
       </section>
 
-      {/* STATS: card overlapping the bottom of the hero */}
-      <section className="relative z-10 mx-4 -mt-10 grid grid-cols-3 divide-x divide-olive/30 rounded-lg bg-paper py-6 text-center md:mx-16 dark:bg-olive">
-        <div>
-          <p className="text-3xl font-extrabold text-brand md:text-4xl dark:text-stone">{trails.length}</p>
-          <p className="text-sm">trails</p>
-        </div>
-        <div>
-          <p className="text-3xl font-extrabold text-brand md:text-4xl dark:text-stone">{regions.length}</p>
-          <p className="text-sm">regions</p>
-        </div>
-        <div>
-          <p className="text-3xl font-extrabold text-brand md:text-4xl dark:text-stone">{hikes.length}</p>
-          <p className="text-sm">group hikes</p>
-        </div>
+      {/* What is in the collection, read as a map legend across the contours. */}
+      <section className="relative pb-20 pt-20">
+        <Contour className="absolute inset-x-0 top-0 h-24 w-full text-brand/50 dark:text-limestone/75" />
+        <dl className="tabular relative flex flex-wrap gap-x-12 gap-y-2 pt-16 text-[0.9375rem]">
+          <div className="flex items-baseline gap-2">
+            <dt className="font-semibold">{trails.length}</dt>
+            <dd className="opacity-75">trails</dd>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <dt className="font-semibold">{regions.length}</dt>
+            <dd className="opacity-75">regions</dd>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <dt className="font-semibold">{hikes.length}</dt>
+            <dd className="opacity-75">group hikes to join</dd>
+          </div>
+        </dl>
       </section>
 
-      {/* PICK YOUR LEVEL: tabs that change the trail cards */}
-      <section className="py-16">
-        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-          <SectionTitle title="Pick your level" text="Choose a difficulty and see trails that match." />
-          <div className="mb-8 flex w-fit gap-1 rounded-full bg-paper p-1 dark:bg-olive" role="group" aria-label="Choose a difficulty">
+      {/* PICK YOUR LEVEL */}
+      <section className="pb-16">
+        <SectionTitle title="Pick your level">
+          <div
+            className="surface flex w-fit gap-1 rounded-full p-1"
+            role="group"
+            aria-label="Choose a difficulty"
+          >
             {levels.map((item) => (
               <button
                 key={item}
@@ -210,68 +202,75 @@ export default function Home() {
                 aria-pressed={level === item}
                 className={
                   level === item
-                    ? 'rounded-full bg-brand px-5 py-2 font-bold text-paper'
-                    : 'rounded-full px-5 py-2 font-bold hover:bg-stone dark:hover:bg-earth'
+                    ? 'rounded-full bg-brand px-5 py-2 text-sm font-semibold text-paper dark:bg-ember'
+                    : 'rounded-full px-5 py-2 text-sm font-semibold opacity-75 transition hover:opacity-100'
                 }
               >
                 {item}
               </button>
             ))}
           </div>
-        </div>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        </SectionTitle>
+
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {levelTrails.slice(0, 3).map((trail) => (
-            <TrailCard
-              key={trail.id}
-              id={trail.id}
-              name={trail.name}
-              region={trail.region}
-              difficulty={trail.difficulty}
-              distanceKm={trail.distanceKm}
-              cover={trail.cover}
-            />
+            <TrailCard key={trail.id} trail={trail} />
           ))}
         </div>
+
         {levelTrails.length > 3 && (
-          <Link to="/trails" className="mt-6 inline-block font-semibold underline underline-offset-4">
+          <Link
+            to="/trails"
+            className="mt-6 inline-block text-sm font-semibold underline decoration-1 underline-offset-4 hover:text-brand dark:hover:text-ember"
+          >
             See all {levelTrails.length} {level.toLowerCase()} trails
           </Link>
         )}
       </section>
 
-      {/* EXPLORE BY REGION: photo grid, first tile is big */}
+      {/* EXPLORE BY REGION: photo mosaic. Names sit in solid label chips, the
+          way a map prints a place name, so they stay readable on any photo. */}
       <section className="pb-16">
-        <SectionTitle title="Explore by region" text="From the Bekaa plains to the Bsharri summits." />
-        <div className="grid auto-rows-[10rem] grid-cols-2 gap-4 md:grid-cols-4">
+        <SectionTitle
+          title="Explore by region"
+          text="Lebanon changes completely in forty kilometres. Start with the landscape you want."
+        />
+        <div className="grid auto-rows-[9rem] grid-cols-2 gap-3 md:grid-cols-4">
           {regionTiles.map((tile, index) => (
             <Link
               key={tile.name}
-              to="/trails"
-              className={`group relative overflow-hidden rounded-lg ${
-                index === 0 ? 'col-span-2 row-span-2' : index === regionTiles.length - 1 ? 'col-span-2 md:col-span-4' : ''
+              to={`/trails?region=${encodeURIComponent(tile.name)}`}
+              className={`photo group relative ${
+                index === 0
+                  ? 'col-span-2 row-span-2'
+                  : index === regionTiles.length - 1
+                    ? 'col-span-2 md:col-span-4'
+                    : ''
               }`}
             >
               <img
                 src={tile.cover.src}
                 alt={tile.cover.alt}
-                className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                loading="lazy"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-              <div className="absolute bottom-0 p-4">
-                <p className={`font-bold text-paper ${index === 0 ? 'text-3xl' : 'text-lg'}`}>{tile.name}</p>
-                <p className="text-sm text-paper">
+              <span className="absolute bottom-0 left-0 flex items-baseline gap-2 bg-stone px-3 py-1.5 dark:bg-earth">
+                <span className={`font-display font-semibold ${index === 0 ? 'text-xl' : 'text-base'}`}>
+                  {tile.name}
+                </span>
+                <span className="tabular text-xs opacity-70">
                   {tile.count} {tile.count === 1 ? 'trail' : 'trails'}
-                </p>
-              </div>
+                </span>
+              </span>
             </Link>
           ))}
         </div>
       </section>
 
-      {/* UPCOMING GROUP HIKES: event cards */}
+      {/* UPCOMING GROUP HIKES */}
       <section className="pb-16">
-        <SectionTitle title="Upcoming group hikes" text="Join a guided group. Spots fill up fast." />
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <SectionTitle title="Upcoming group hikes" text="Walk with people who know the route." />
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
           {upcoming.map((hike) => (
             <HikeCard
               key={hike.id}
@@ -287,25 +286,30 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CALL TO ACTION + TIPS (show/hide) */}
-      <section className="mb-12 rounded-lg bg-olive p-8 text-paper md:p-12">
+      {/* BEFORE YOU GO */}
+      <section className="bg-olive p-8 text-paper md:p-12 dark:bg-olive-deep">
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="text-3xl font-extrabold text-paper md:text-4xl">Ready for your first hike?</h2>
-            <p className="mt-2 opacity-90">Read the essentials before you head out.</p>
+            <h2 className="display-lg text-paper dark:text-paper">Before you go</h2>
+            <p className="prose-measure mt-2 opacity-90">
+              Five things worth checking, whatever the trail.
+            </p>
           </div>
           <button
             onClick={() => setShowTips(!showTips)}
             aria-expanded={showTips}
-            className="rounded bg-paper px-8 py-3 font-bold text-ink hover:opacity-90"
+            className="btn shrink-0 bg-paper text-ink hover:bg-stone"
           >
-            {showTips ? 'Hide tips' : 'Show hiking tips'}
+            {showTips ? 'Hide the checklist' : 'Show the checklist'}
           </button>
         </div>
         {showTips && (
-          <ul className="mt-8 grid list-disc gap-x-10 gap-y-2 pl-5 sm:grid-cols-2">
+          <ul className="mt-8 grid gap-x-10 gap-y-2.5 border-t border-paper/25 pt-7 sm:grid-cols-2">
             {tips.map((tip) => (
-              <li key={tip}>{tip}</li>
+              <li key={tip} className="flex gap-3">
+                <span aria-hidden="true" className="mt-2 h-px w-4 shrink-0 bg-paper/60" />
+                {tip}
+              </li>
             ))}
           </ul>
         )}

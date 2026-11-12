@@ -51,11 +51,11 @@ export default function Login() {
   }
 
   return (
-    <div className="mx-auto mt-12 max-w-md rounded-lg border border-ink/15 p-8 dark:border-stone/20">
-      <h1 className="mb-6 text-center text-3xl font-bold">Log in to Lebanon Trails</h1>
+    <div className="surface mx-auto mt-14 max-w-md p-8">
+      <h1 className="display-md mb-7">Log in</h1>
 
       {registeredEmail && !error && (
-        <p role="status" className="mb-5 rounded border border-olive/40 bg-olive/10 px-4 py-3">
+        <p role="status" className="mb-5 border-l-2 border-olive bg-olive/10 px-4 py-3 text-sm dark:border-limestone">
           Your account is ready. Log in with your new password.
         </p>
       )}
@@ -88,7 +88,7 @@ export default function Login() {
             className={inputClass}
           />
         </FormField>
-        <button type="submit" className="w-full rounded bg-brand py-2.5 font-semibold text-paper hover:opacity-90">
+        <button type="submit" className="btn btn-primary w-full">
           Log in
         </button>
       </form>

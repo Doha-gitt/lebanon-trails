@@ -64,7 +64,7 @@ function HikeFormContent({ hikeId }) {
   if (isEditing && !existingHike) {
     return (
       <section className="py-10">
-        <h1 className="text-3xl font-bold">Hike not found</h1>
+        <h1 className="display-lg">Hike not found</h1>
         <p className="mt-2">This hike doesn't exist, so it can't be edited.</p>
         <Link to="/trails" className="mt-4 inline-block underline underline-offset-4">
           Browse trails
@@ -76,7 +76,7 @@ function HikeFormContent({ hikeId }) {
   if (isEditing && !canEdit(existingHike)) {
     return (
       <section className="py-10">
-        <h1 className="text-3xl font-bold">You can't edit this hike</h1>
+        <h1 className="display-lg">You can’t edit this hike</h1>
         <p className="mt-2">Only the person who organized this hike can change its details.</p>
         <Link to={`/group-hikes/${hikeId}`} className="mt-4 inline-block underline underline-offset-4">
           Back to the hike
@@ -165,8 +165,8 @@ function HikeFormContent({ hikeId }) {
   const cancelTo = isEditing ? `/group-hikes/${hikeId}` : selectedTrail ? `/trails/${selectedTrail.id}` : '/trails'
 
   return (
-    <div className="mx-auto my-10 max-w-2xl">
-      <h1 className="text-3xl font-bold md:text-4xl">{isEditing ? 'Edit group hike' : 'Organize a group hike'}</h1>
+    <div className="mx-auto max-w-2xl pt-10">
+      <h1 className="display-lg">{isEditing ? 'Edit group hike' : 'Organize a group hike'}</h1>
       <p className="mt-2 mb-8 opacity-80">
         {isEditing ? 'Change the details below and save.' : 'Choose a trail and fill in the details. All fields except "What to bring" are required.'}
       </p>
@@ -291,7 +291,7 @@ function HikeFormContent({ hikeId }) {
         </FormField>
 
         <div className="flex flex-wrap items-center gap-4 pt-2">
-          <button type="submit" className="rounded bg-brand px-6 py-3 font-semibold text-paper hover:opacity-90">
+          <button type="submit" className="btn btn-primary">
             {isEditing ? 'Save changes' : 'Publish hike'}
           </button>
           <Link to={cancelTo} className="underline underline-offset-4">

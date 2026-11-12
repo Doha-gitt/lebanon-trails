@@ -5,7 +5,7 @@ import Logo from './Logo'
 
 const links = [
   { to: '/trails', label: 'Trails' },
-  { to: '/group-hikes/new', label: 'Organize a Hike' },
+  { to: '/group-hikes/new', label: 'Organize a hike' },
 ]
 
 // Only shown when nobody is logged in
@@ -14,8 +14,15 @@ const guestLinks = [
   { to: '/register', label: 'Register' },
 ]
 
+// Active page is marked with a rule under the label rather than a colour
+// change, so it stays legible against the olive bar.
 function linkClass({ isActive }) {
-  return `underline-offset-4 ${isActive ? 'font-semibold underline' : 'hover:underline'}`
+  return [
+    'relative py-1 text-[0.9375rem] transition-opacity',
+    isActive
+      ? 'font-semibold after:absolute after:-bottom-0.5 after:left-0 after:h-px after:w-full after:bg-paper'
+      : 'opacity-85 hover:opacity-100',
+  ].join(' ')
 }
 
 export default function Navbar() {
@@ -29,24 +36,33 @@ export default function Navbar() {
   }
 
   return (
-    <header className="bg-olive text-paper">
-      <nav className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 p-4">
-        <Link to="/" className="flex items-center gap-2 text-xl font-bold">
-          <Logo />
+    <header className="sticky top-0 z-50 border-b border-black/15 bg-olive text-paper dark:bg-olive-deep">
+      <nav className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-7 gap-y-3 px-4 py-3.5 sm:px-6">
+        <Link
+          to="/"
+          className="flex items-center gap-2.5 font-display text-[1.3rem] font-semibold tracking-tight"
+        >
+          <Logo trailClassName="stroke-olive dark:stroke-olive-deep" />
           Lebanon Trails
         </Link>
-        <div className="flex flex-wrap gap-x-4 gap-y-1">
+
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
           {[...links, ...(currentUser ? [] : guestLinks)].map((link) => (
             <NavLink key={link.to} to={link.to} className={linkClass}>
               {link.label}
             </NavLink>
           ))}
         </div>
-        <div className="ml-auto flex items-center gap-4">
+
+        <div className="flex w-full items-center gap-5 sm:ml-auto sm:w-auto">
           {currentUser && (
             <>
-              <span>Hi, {currentUser.name}</span>
-              <button type="button" onClick={handleLogout} className="underline-offset-4 hover:underline">
+              <span className="text-[0.9375rem] opacity-85">Hi, {currentUser.name}</span>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="text-[0.9375rem] opacity-85 transition-opacity hover:opacity-100 hover:underline hover:underline-offset-4"
+              >
                 Log out
               </button>
             </>
@@ -54,7 +70,7 @@ export default function Navbar() {
           <button
             type="button"
             onClick={toggleTheme}
-            className="rounded border border-paper/60 px-3 py-1 text-sm hover:bg-paper hover:text-olive"
+            className="rounded-full border border-paper/45 px-3.5 py-1.5 text-[0.8125rem] font-medium transition-colors hover:bg-paper hover:text-olive"
           >
             {isDark ? 'Light mode' : 'Dark mode'}
           </button>

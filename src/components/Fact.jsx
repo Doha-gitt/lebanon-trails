@@ -2,8 +2,8 @@
 export default function Fact({ label, value }) {
   return (
     <div>
-      <dt className="text-sm opacity-75">{label}</dt>
-      <dd className="text-lg font-semibold">{value}</dd>
+      <dt className="label-map">{label}</dt>
+      <dd className="tabular mt-1 font-semibold">{value}</dd>
     </div>
   )
 }

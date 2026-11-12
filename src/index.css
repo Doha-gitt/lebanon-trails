@@ -1,16 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400..700&family=Fraunces:opsz,wght@9..144,400..900&display=swap');
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Team colors live here (Tailwind v4 has no tailwind.config.js).
-   Each one gives you bg-*, text-*, border-*, e.g. bg-olive, text-brand. */
+/* ---------------------------------------------------------------------------
+   Design tokens. Tailwind v4 has no tailwind.config.js, so everything lives
+   here. Each colour gives you bg-*, text-*, border-*, e.g. bg-olive.
+   --------------------------------------------------------------------------- */
 @theme {
-  --color-brand: #800020; /* burgundy: headings, buttons */
-  --color-olive: #5a6332; /* navbar */
+  /* Core palette (unchanged team colours) */
+  --color-brand: #800020; /* burgundy: headings, primary buttons */
+  --color-olive: #5a6332; /* navbar, surfaces */
   --color-stone: #e2d6bd; /* light mode page, dark mode text */
   --color-paper: #f1e9d6; /* text on olive or burgundy */
   --color-ink: #2a1a14; /* light mode text */
   --color-earth: #241c17; /* dark mode page */
+
+  /* Added: burgundy is too dark to read as an accent on the dark brown page,
+     so ember carries hover and active states there. */
+  --color-ember: #a8324a;
+  /* Added: muted text and the contour linework. */
+  --color-limestone: #b9a87f;
+  /* Added: a deeper olive for raised surfaces in dark mode. */
+  --color-olive-deep: #424a24;
+
+  /* Type. Fraunces is a soft, low-contrast serif used for display only;
+     Archivo is a grotesque with tabular figures for UI and all data. */
+  --font-sans: 'Archivo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+
+  /* Radius: surfaces stay nearly square; only controls go fully round. */
+  --radius-edge: 3px;
 }
 
 @layer base {
@@ -19,15 +39,226 @@
     color-scheme: dark;
   }
 
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-synthesis-weight: none;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Display face for headings, with optical sizing doing the work at large sizes. */
   h1,
   h2,
   h3 {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-weight: 600;
+    letter-spacing: -0.015em;
     color: var(--color-brand);
+    text-wrap: balance;
   }
 
   .dark h1,
   .dark h2,
   .dark h3 {
     color: var(--color-stone);
+  }
+
+  /* Every number in the interface lines up in its column. */
+  time,
+  output,
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* One visible focus style everywhere, including for keyboard users. */
+  :focus-visible {
+    outline: 2px solid var(--color-ember);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  .dark :focus-visible {
+    outline-color: var(--color-stone);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* --- Type scale -------------------------------------------------------- */
+
+  /* The one bold moment on the site: the home hero headline. */
+  .display-xl {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: clamp(2.25rem, 7.2vw, 5.75rem);
+    font-weight: 600;
+    line-height: 0.96;
+    letter-spacing: -0.03em;
+    overflow-wrap: break-word;
+    font-variation-settings: 'SOFT' 20, 'WONK' 1;
+  }
+
+  .display-lg {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: clamp(1.75rem, 4.3vw, 3.25rem);
+    font-weight: 600;
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+  }
+
+  .display-md {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: clamp(1.5rem, 2.6vw, 2rem);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+  }
+
+  /* Body copy, held under 70 characters a line. */
+  .prose-measure {
+    max-width: 62ch;
+    line-height: 1.6;
+  }
+
+  /* Small map-style label: the region under a trail name, a field hint. */
+  .label-map {
+    font-size: 0.8125rem;
+    line-height: 1.3;
+    letter-spacing: 0.01em;
+    color: color-mix(in oklab, var(--color-ink) 65%, transparent);
+  }
+
+  .dark .label-map {
+    color: var(--color-limestone);
+  }
+
+  /* --- Surfaces ---------------------------------------------------------- */
+
+  .surface {
+    background: var(--color-paper);
+    border: 1px solid color-mix(in oklab, var(--color-ink) 12%, transparent);
+    border-radius: var(--radius-edge);
+  }
+
+  .dark .surface {
+    background: color-mix(in oklab, var(--color-olive-deep) 42%, var(--color-earth));
+    border-color: color-mix(in oklab, var(--color-stone) 14%, transparent);
+  }
+
+  /* --- Controls ---------------------------------------------------------- */
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.5rem;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    line-height: 1;
+    text-align: center;
+    transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+  }
+
+  .btn-primary {
+    background: var(--color-brand);
+    color: var(--color-paper);
+  }
+
+  .btn-primary:hover {
+    background: var(--color-ember);
+  }
+
+  .dark .btn-primary {
+    background: var(--color-ember);
+  }
+
+  .dark .btn-primary:hover {
+    background: var(--color-brand);
+  }
+
+  .btn-outline {
+    border: 1.5px solid currentColor;
+  }
+
+  .btn-outline:hover {
+    background: var(--color-paper);
+    color: var(--color-ink);
+  }
+
+  /* Form controls share one look across every page. */
+  .field {
+    width: 100%;
+    border-radius: var(--radius-edge);
+    border: 1px solid color-mix(in oklab, var(--color-ink) 28%, transparent);
+    background: var(--color-paper);
+    color: var(--color-ink);
+    padding: 0.625rem 0.75rem;
+    font-size: 0.9375rem;
+    transition: border-color 0.18s ease;
+  }
+
+  .field:hover {
+    border-color: color-mix(in oklab, var(--color-ink) 45%, transparent);
+  }
+
+  .dark .field {
+    border-color: color-mix(in oklab, var(--color-stone) 26%, transparent);
+    background: color-mix(in oklab, var(--color-earth) 70%, black);
+    color: var(--color-stone);
+  }
+
+  .dark .field:hover {
+    border-color: color-mix(in oklab, var(--color-stone) 45%, transparent);
+  }
+
+  .field::placeholder {
+    color: color-mix(in oklab, var(--color-ink) 45%, transparent);
+  }
+
+  .dark .field::placeholder {
+    color: color-mix(in oklab, var(--color-stone) 42%, transparent);
+  }
+
+  /* --- Photographs ------------------------------------------------------- */
+
+  /* Photos are the product: never covered by text, never tinted. A hairline
+     keeps pale skies from bleeding into a pale page. */
+  .photo {
+    border-radius: var(--radius-edge);
+    overflow: hidden;
+    background: color-mix(in oklab, var(--color-ink) 8%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-ink) 10%, transparent);
+  }
+
+  .dark .photo {
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-stone) 10%, transparent);
+  }
+
+  /* --- Full bleed -------------------------------------------------------- */
+
+  /* Lets the hero escape the centred content column. Negative margins rather
+     than width:100vw, which overflows by the width of the scrollbar. */
+  .bleed {
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
   }
 }
