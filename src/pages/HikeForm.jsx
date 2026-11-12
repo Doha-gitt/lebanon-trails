@@ -35,7 +35,7 @@ export default function HikeForm() {
 function HikeFormContent({ hikeId }) {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const { hikes, addHike, updateHike } = useHikes()
+  const { hikes, addHike, updateHike, canEdit } = useHikes()
   const { currentUser } = useAuth()
 
   const isEditing = Boolean(hikeId)
@@ -68,6 +68,18 @@ function HikeFormContent({ hikeId }) {
         <p className="mt-2">This hike doesn't exist, so it can't be edited.</p>
         <Link to="/trails" className="mt-4 inline-block underline underline-offset-4">
           Browse trails
+        </Link>
+      </section>
+    )
+  }
+
+  if (isEditing && !canEdit(existingHike)) {
+    return (
+      <section className="py-10">
+        <h1 className="text-3xl font-bold">You can't edit this hike</h1>
+        <p className="mt-2">Only the person who organized this hike can change its details.</p>
+        <Link to={`/group-hikes/${hikeId}`} className="mt-4 inline-block underline underline-offset-4">
+          Back to the hike
         </Link>
       </section>
     )

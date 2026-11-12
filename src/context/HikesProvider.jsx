@@ -7,8 +7,17 @@ import { useAuth } from './AuthContext'
 // Changes last until the browser is refreshed (there is no backend yet).
 export function HikesProvider({ children }) {
   const [hikes, setHikes] = useState(groupHikes)
-  const [joinedIds, setJoinedIds] = useState([]) // hikes the current visitor has joined
+  // Hikes each user has joined, by user id: { 'user-1': ['hike-3'], ... }
+  const [joinedByUser, setJoinedByUser] = useState({})
   const { currentUser } = useAuth()
+
+  // Hikes the logged-in user has joined (empty when nobody is logged in)
+  const joinedIds = (currentUser && joinedByUser[currentUser.id]) || []
+
+  // Only the person who organized a hike may edit it
+  function canEdit(hike) {
+    return Boolean(currentUser && hike && hike.organizerId === currentUser.id)
+  }
 
   function changeSpotsTaken(id, change) {
     setHikes((current) =>
@@ -16,34 +25,42 @@ export function HikesProvider({ children }) {
     )
   }
 
+  function setJoinedIds(ids) {
+    setJoinedByUser((current) => ({ ...current, [currentUser.id]: ids }))
+  }
+
   function joinHike(id) {
     const hike = hikes.find((item) => item.id === id)
     if (!currentUser || !hike || joinedIds.includes(id) || hike.spotsTaken >= hike.spotsTotal) return
     changeSpotsTaken(id, 1)
-    setJoinedIds((current) => [...current, id])
+    setJoinedIds([...joinedIds, id])
   }
 
   function leaveHike(id) {
-    if (!joinedIds.includes(id)) return
+    if (!currentUser || !joinedIds.includes(id)) return
     changeSpotsTaken(id, -1)
-    setJoinedIds((current) => current.filter((joinedId) => joinedId !== id))
+    setJoinedIds(joinedIds.filter((joinedId) => joinedId !== id))
   }
 
   // For the Organize/Edit Hike form. addHike returns the new hike's id.
+  // The logged-in user is saved as the hike's organizer.
   function addHike(newHike) {
     if (!currentUser) return null
     const id = `hike-${Date.now()}`
-    setHikes((current) => [...current, { ...newHike, id, spotsTaken: 0 }])
+    setHikes((current) => [...current, { ...newHike, id, organizerId: currentUser.id, spotsTaken: 0 }])
     return id
   }
 
   function updateHike(id, changes) {
-    if (!currentUser) return
-    setHikes((current) => current.map((hike) => (hike.id === id ? { ...hike, ...changes } : hike)))
+    if (!canEdit(hikes.find((hike) => hike.id === id))) return
+    // The organizer and spots taken can't be changed through the form
+    // eslint-disable-next-line no-unused-vars
+    const { organizerId, spotsTaken, ...allowed } = changes
+    setHikes((current) => current.map((hike) => (hike.id === id ? { ...hike, ...allowed } : hike)))
   }
 
   return (
-    <HikesContext.Provider value={{ hikes, joinedIds, joinHike, leaveHike, addHike, updateHike }}>
+    <HikesContext.Provider value={{ hikes, joinedIds, joinHike, leaveHike, addHike, updateHike, canEdit }}>
       {children}
     </HikesContext.Provider>
   )
