@@ -3,6 +3,7 @@ import { ThemeProvider } from './context/ThemeProvider'
 import { AuthProvider } from './context/AuthProvider'
 import { HikesProvider } from './context/HikesProvider'
 import Layout from './components/Layout'
+import RequireAuth from './components/RequireAuth'
 import Home from './pages/Home'
 import TrailList from './pages/TrailList'
 import TrailDetail from './pages/TrailDetail'
@@ -22,9 +23,23 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/trails" element={<TrailList />} />
                 <Route path="/trails/:trailId" element={<TrailDetail />} />
-                <Route path="/group-hikes/new" element={<HikeForm />} />
+                <Route
+                  path="/group-hikes/new"
+                  element={
+                    <RequireAuth>
+                      <HikeForm />
+                    </RequireAuth>
+                  }
+                />
                 <Route path="/group-hikes/:hikeId" element={<GroupHikeDetail />} />
-                <Route path="/group-hikes/:hikeId/edit" element={<HikeForm />} />
+                <Route
+                  path="/group-hikes/:hikeId/edit"
+                  element={
+                    <RequireAuth>
+                      <HikeForm />
+                    </RequireAuth>
+                  }
+                />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="*" element={<Navigate to="/" replace />} />

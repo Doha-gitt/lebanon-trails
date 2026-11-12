@@ -7,7 +7,7 @@ import { formatDate, formatDuration } from '../utils/format'
 
 export default function GroupHikeDetail() {
   const { hikeId } = useParams()
-  const { hikes, joinedIds, joinHike, leaveHike } = useHikes()
+  const { hikes, joinedIds, joinHike, leaveHike, canEdit } = useHikes()
   // Set by the Organize/Edit form after saving: 'created' or 'updated'
   const saved = useLocation().state?.saved
   const hike = hikes.find((item) => item.id === hikeId)
@@ -84,12 +84,15 @@ export default function GroupHikeDetail() {
             </ul>
           </section>
 
-          <p className="mt-10 text-sm">
-            Organizing this hike?{' '}
-            <Link to={`/group-hikes/${hike.id}/edit`} className="underline underline-offset-4">
-              Edit hike details
-            </Link>
-          </p>
+          {/* Only the hike's organizer sees the edit link */}
+          {canEdit(hike) && (
+            <p className="mt-10 text-sm">
+              You organized this hike.{' '}
+              <Link to={`/group-hikes/${hike.id}/edit`} className="underline underline-offset-4">
+                Edit hike details
+              </Link>
+            </p>
+          )}
         </div>
 
         <JoinPanel

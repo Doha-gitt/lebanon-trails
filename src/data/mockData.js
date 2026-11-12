@@ -333,9 +333,11 @@ for (const trail of trails) {
 // useHikes() from src/context/HikesContext.js rather than importing this array,
 // so that joining a hike or saving the hike form updates every page.
 // date: 'YYYY-MM-DD', startTime: 'HH:MM' (24-hour), durationHours: number
+// organizerId: id of the user account that created the hike (only they can edit it)
 export const groupHikes = [
   {
     id: 'hike-1',
+    organizerId: 'user-1',
     trailId: 'chouwen',
     title: 'Forest steps to Chouwen lake',
     date: '2026-11-21',
@@ -351,6 +353,7 @@ export const groupHikes = [
   },
   {
     id: 'hike-2',
+    organizerId: 'user-2',
     trailId: 'jbaa-south',
     title: 'Sunset walk above Jbaa',
     date: '2026-11-28',
@@ -365,6 +368,7 @@ export const groupHikes = [
   },
   {
     id: 'hike-3',
+    organizerId: 'user-3',
     trailId: 'barouk',
     title: 'Snowshoeing in the Barouk cedars',
     date: '2026-12-05',
@@ -379,6 +383,7 @@ export const groupHikes = [
   },
   {
     id: 'hike-4',
+    organizerId: 'user-1',
     trailId: 'darb-al-msaylha',
     title: 'Bridges and ruins of Darb Al Msaylha',
     date: '2026-12-12',
@@ -393,6 +398,7 @@ export const groupHikes = [
   },
   {
     id: 'hike-5',
+    organizerId: 'user-2',
     trailId: 'yahshoush',
     title: 'River gorge to the Yahshoush waterfall',
     date: '2026-12-19',
@@ -407,6 +413,7 @@ export const groupHikes = [
   },
   {
     id: 'hike-6',
+    organizerId: 'user-3',
     trailId: 'baalbeck',
     title: 'Winter walk through the Baalbeck temples',
     date: '2027-01-09',
